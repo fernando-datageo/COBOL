@@ -1,14 +1,13 @@
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. PRGCOB01.
-      ******************************************************
-      ***   AREA DE COMENTARIOS - REMARKS 
-      ***   OBJETIVO DO PROGRAMA = MOSTRAR A STRING HELLO WORLD
-      ***   AUTOR: LUIS FERNANDO
-      ***   DATA : 01/06/2021
-      ******************************************************      
+       PROGRAM-ID. PROGCOB01.
+      *********************************************
+      *    AREA DE COMENTÁRIOS - REMARKS
+      *    AUTHOR  = LUIS FERNANDO
+      *    OBJETIVO: MOSTRAR UMA MSG DE HELLO WORLD
+      *    DATA    = 01/06/2021
+      *********************************************
        ENVIRONMENT DIVISION.
        DATA DIVISION.
-       WORKING-STORAGE SECTION.
        PROCEDURE DIVISION.
-           DISPLAY 'Hello World'.
+           DISPLAY 'Hello World!'.
            STOP RUN.
