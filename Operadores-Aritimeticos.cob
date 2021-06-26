@@ -1,0 +1,48 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. OPERADORES ARITIMETICOS.
+      *********************************************
+      * AREA DE COMENTARIOS - REMARKS
+      * AUTHOR  = LUIS F C LAZANHA
+      * OBJETIVO: OPERADORES ARITIMETICOS
+      * DATA    = 26/06/2021
+      *********************************************
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       77 WRK-NUM1     PIC 9(02)   VALUE ZEROS.
+       77 WRK-NUM2     PIC 9(02)   VALUE ZEROS.       
+       77 WRK-RESUL    PIC 9(04)   VALUE ZEROS.
+       77 WRK-RESTO    PIC 9(02)   VALUE ZEROS.
+       PROCEDURE DIVISION.
+           DISPLAY 'DIGITE O PRIMEIRO NUMERO..... : '.
+             ACCEPT WRK-NUM1.
+           DISPLAY 'DIGITE O SEGUNDO NUMERO..... : '.
+             ACCEPT WRK-NUM2.
+           DISPLAY  '--------- SAIDA DE DADOS ------------'.
+             DISPLAY 'NUMERO 1. : ' WRK-NUM1.
+             DISPLAY 'NUMERO 2. : ' WRK-NUM2.
+
+      ***** SOMA - COMANDO ADD *****             
+             ADD WRK-NUM2 WRK-NUM1 TO WRK-RESUL.
+             DISPLAY '== OPERACAO SOMA ======' WRK-RESUL.
+             
+      ***** SUBTRACAO - COMANDO SUBTRACT *****   
+             SUBTRACT WRK-NUM1 FROM WRK-NUM2 GIVING WRK-RESUL. 
+             DISPLAY '== OPERACAO SUBTRACAO ======' WRK-RESUL.
+
+      ***** DIVISAO - COMANDO DIVIDE *****
+             DIVIDE WRK-NUM1 BY WRK-NUM2 GIVING WRK-RESUL
+                 REMAINDER WRK-RESTO.
+             DISPLAY '== OPERACAO DIVISAO ==========' WRK-RESUL 
+                     ' COM RESTO ' WRK-RESTO.
+
+      ***** MULTIPLICACAO - COMANDO MULTIPLY *****
+             MULTIPLY WRK-NUM1 BY WRK-NUM2 GIVING WRK-RESUL.
+             DISPLAY '== OPERACAO MULTIPLICACAO ======  ' WRK-RESUL.
+                         
+
+
+           STOP RUN.
