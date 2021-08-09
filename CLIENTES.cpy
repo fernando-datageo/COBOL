@@ -1,0 +1,382 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CLIENTES.
+      ******************************************************************
+      * OBVETIVO: SISTEMA DE GESTAO DE CLIENTES - CRUD                 *
+      * AUTOR   : LUIS F C LAZANHA                                     *
+      ******************************************************************
+       ENVIRONMENT DIVISION.
+      *********** DIRETRIZES DE USOS DO ARRQUIVO **********
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *********** ACESSO AO DIRETORIO ENTRADA **********
+           SELECT CLIENTES ASSIGN TO 'D:\COBOL\CLIENTES.DAT'
+      *ARQUIVOS COM INDICE E ACESSO POR CHAVE DIRETA NAO SEQUENCIAL
+           ORGANIZATION IS INDEXED
+           ACCESS MODE IS RANDOM
+      *VARIAVEL QUE VAI RECEBER O STATUS DO ARQUIVO
+           FILE STATUS IS CLIENTES-STATUS
+      *CHAVE DE ACESSO
+           RECORD KEY IS CLIENTES-CHAVE.
+
+      *********** ACESSO AO DIRETORIO SAIDA **********
+           SELECT RELATO ASSIGN TO 'D:\COBOL\RELATO.TXT'
+      *ARQUIVOS COM INDICE E ACESSO POR CHAVE DIRETA NAO SEQUENCIAL
+           ORGANIZATION IS SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+      *********** LAYOUT DE ESTRUTURA DO ARQUIVO ENTRADA **********
+       FD CLIENTES.
+       01 CLIENTES-REG.
+           05 CLIENTES-CHAVE.
+               10 CLIENTES-FONE PIC 9(09).
+           05 CLIENTES-NOME     PIC X(30).
+           05 CLIENTES-EMAIL    PIC X(40).
+
+      *********** LAYOUT DE ESTRUTURA DO ARQUIVO SAIDA **********
+       FD RELATO.
+       01 RELATO-REG.
+      *VARIAVEL QUE VAI GRAVAR FONE - NOME - EMAIL
+           05 RELATO-DADOS PIC X(79).
+
+
+
+
+       WORKING-STORAGE SECTION.
+      *********** VARIAVEIS DE TRABALHO **********
+      *SEGURA A TELA NO MENU E GUARDA OPCAO
+       77 WRK-OPCAO           PIC X(01).
+       77 WRK-MODULO          PIC X(30).
+      *SEGURA A TECLA NOS MODULOS
+       77 WRK-TECLA           PIC X(01).
+      *GUARDA OPCAO DO MENU RELATORIO
+       77 WRK-OPCAO-RELATO    PIC X(01).
+       77 CLIENTES-STATUS     PIC 9(02).
+       77 WRK-MSGERRO         PIC X(35).
+       77 WRK-CONTALINHA      PIC 9(03) VALUE 0.
+       77 WRK-QTREGISTROS     PIC 9(03) VALUE 0.
+
+      ********************* TELAS ********************
+       SCREEN SECTION.
+      *********** TARJAS E TEXTO CABECALHOS **********
+       01 TELA.
+           05 LIMPA-TELA.
+      *           LIMPA TUDO
+               10 BLANK SCREEN.
+      *TARJA 1: INICI0 L1C1 / LIMPA LINHA (END OF LINE) / COR DE FUNDO
+               10 LINE 01 COLUMN 01 ERASE EOL BACKGROUND-COLOR 3.
+      *TEXTO 1: INICIO L1C25 / COR DE FUNDO
+               10 LINE 01 COLUMN 25 BACKGROUND-COLOR 3
+      *COR DA LETRA DO TEXTO 1
+                  FOREGROUND-COLOR 0
+      *MASCARA E TEXTO 1 FIXO
+                  PIC X(25) FROM 'SISTEMA DE CLIENTES'.
+
+      *TARJA 2: INICI0 L2C1 / LIMPA LINHA (EOL)/ COR DE FUNDO
+               10 LINE 02 COLUMN 01 ERASE EOL BACKGROUND-COLOR 1
+      *TEXTO 2: MASCARA / TEXTO VARIAVEL
+                  PIC X(30) FROM WRK-MODULO.
+
+      *********** MENU PRINCIPAL - CRUD **********
+       01 MENU.
+           05 LINE 07 COLUMN 15 VALUE '1 - INCLUIR   "C-REATE"'.
+           05 LINE 08 COLUMN 15 VALUE '2 - CONSULTAR "R-EAD"'.
+           05 LINE 09 COLUMN 15 VALUE '3 - ALTERAR   "U-PDATE"'.
+           05 LINE 10 COLUMN 15 VALUE '4 - EXCLUIR   "D-ELETE"'.
+           05 LINE 11 COLUMN 15 VALUE '5 - RELATORIO'.
+           05 LINE 12 COLUMN 15 VALUE 'X - SAIR'.
+           05 LINE 13 COLUMN 15 VALUE 'OPCAO: '.
+      *ACEITA ENTRADA DO USUARIO APOS O Nº DE CARACTER DA COLUNA
+           05 LINE 13 COLUMN 22 USING WRK-OPCAO.
+
+      *********** MENU RELATORIO **********
+       01 MENU-RELATO.
+           05 LINE 12 COLUMN 55 VALUE '1 - EM TELA'.
+           05 LINE 13 COLUMN 55 VALUE '2 - EM DISCO'.
+           05 LINE 14 COLUMN 55 VALUE 'OPCAO: '.
+           05 LINE 14 COLUMN 62 USING WRK-OPCAO-RELATO.
+
+      *********** MENU DE REGISTRO NOVO CLIENTE **********
+       01 TELA-REGISTRO.
+      *AS VARIAVES DE REGISTRO NAO PRECISAM SER MOVIDAS (ESTRUTURAL)
+           05 CHAVE FOREGROUND-COLOR 2.
+               10 LINE 10 COLUMN 10 VALUE 'TELEFONE: '.
+      *INSERE A ENTRADA CLIENTES-FONE 2 COLUNAS APOS A CHAMADA
+               10 COLUMN PLUS 2 PIC 9(09) USING CLIENTES-FONE
+      *ENCHER DE ZEROS QUANDO NAO ESTIVER PREENCHIDO
+                   BLANK WHEN ZEROS.
+           05 SS-DADOS.
+               10 LINE 11 COLUMN 10 VALUE 'NOME:     '.
+               10 COLUMN PLUS 2 PIC X(18) USING CLIENTES-NOME.
+               10 LINE 12 COLUMN 10 VALUE 'E-MAIL:   '.
+               10 COLUMN PLUS 2 PIC X(18) USING CLIENTES-EMAIL.
+
+      *********** SESSAO MOSTRA ERRO **********
+       01 MOSTRA-ERRO.
+           02 MSG-ERRO.
+      *TARJA
+               10 LINE 16 COLUMN 01 ERASE EOL BACKGROUND-COLOR 3.
+      *TEXTO
+               10 LINE 16 COLUMN 10 BACKGROUND-COLOR 3
+               FOREGROUND-COLOR 0 PIC X(35) FROM WRK-MSGERRO.
+      *CURSOR FIXA TELA / ENTRADA USUARIO
+               10 COLUMN PLUS 2 PIC X(01) BACKGROUND-COLOR 3
+               USING WRK-TECLA.
+
+       PROCEDURE DIVISION.
+      *********** LOGICA ESTRUTURADA **********
+       0001-PRINCIPAL SECTION.
+           PERFORM 1000-INICIAR THRU 1100-MONTATELA.
+           PERFORM 2000-PROCESSAR
+            UNTIL WRK-OPCAO = 'X' OR WRK-OPCAO = 'x'.
+           PERFORM 3000-FINALIZAR.
+           STOP RUN.
+
+       1000-INICIAR.
+      *ABERTURA DO ARQUIVO E EXPORTACAO
+      *I = LER ARQUIVO / O = GRAVAR ARQUIVO / I-O = LER GRAVAR
+           OPEN I-O CLIENTES
+      *TESTE DE FILE STATUS
+      *EXISTE = 0 / NAO EXISTE = 35
+               IF CLIENTES-STATUS = 35 THEN
+      *NAO EXISTE ENTAO CRIA
+                   OPEN OUTPUT CLIENTES
+                   CLOSE CLIENTES
+      *REPETE A OPERACAO INICAL COM ARQUIVO GERADO
+                   OPEN I-O CLIENTES
+               END-IF.
+
+       1100-MONTATELA.
+           MOVE 0 TO WRK-QTREGISTROS.
+           DISPLAY TELA.
+      *MOSTRA MENU E ACEITA A ENTRADA DO USUARIO
+           ACCEPT MENU.
+
+       2000-PROCESSAR.
+       MOVE SPACES TO WRK-MSGERRO CLIENTES-NOME CLIENTES-EMAIL.
+      *AVALIA OPCAO DO USUARIO
+           EVALUATE WRK-OPCAO
+               WHEN 1
+                   PERFORM 5000-INCLUIR
+               WHEN 2
+                   PERFORM 6000-CONSULTAR
+               WHEN 3
+                   PERFORM 7000-ALTERAR
+               WHEN 4
+                   PERFORM 8000-EXCLUIR
+               WHEN 5
+                   ACCEPT MENU-RELATO
+                   IF WRK-OPCAO-RELATO EQUAL 1
+                       PERFORM 9000-RELATORIOTELA
+                   END-IF
+                   IF WRK-OPCAO-RELATO EQUAL 2
+                       PERFORM 9100-RELATORIODISCO
+                   END-IF
+               WHEN OTHER
+                   IF WRK-OPCAO NOT EQUAL 'X'
+                    MOVE 'OPCAO INVALIDA!' TO WRK-MSGERRO
+                    ACCEPT MOSTRA-ERRO
+                   END-IF
+           END-EVALUATE.
+           PERFORM 1100-MONTATELA.
+
+       3000-FINALIZAR.
+           CLOSE CLIENTES.
+
+      *OPCAO 1 DO MENU PRINCIPAL CRUD
+       5000-INCLUIR.
+           MOVE 'MODULO - INCLUSAO' TO WRK-MODULO.
+           DISPLAY TELA.
+      *SEMPRE RESETAR COM A CHAVE LIMPA
+               MOVE ZEROS TO CLIENTES-FONE.
+      *ENTRADA DOS DADOS DE REG DO USUARIO
+           ACCEPT TELA-REGISTRO.
+      *GRAVA O REGISTRO DO CLIENTE RELACIONADO A ESTRUTURA FD
+               WRITE CLIENTES-REG
+      *SENTENCA QUE INVALIDA A GRAVACAO EM CASO DE DUPLICIDADE
+      *FILE ESTATUS = 22 = INVALID KEY
+                INVALID KEY
+                 MOVE 'JA EXISTE! (N)OVO REGISTRO?' TO WRK-MSGERRO
+      *MOSTRA A SESSAO E ESPERA INTERACAO COM USUARIO
+                 ACCEPT MOSTRA-ERRO
+                IF WRK-TECLA = 'N' OR WRK-TECLA = 'n'
+                    MOVE ZEROS TO CLIENTES-FONE
+                    PERFORM 5000-INCLUIR
+                END-IF
+               END-WRITE.
+
+      *OPCAO 2 DO MENU CRUD
+       6000-CONSULTAR.
+      *CABECALHO
+           MOVE 'MODULO - CONSULTAR' TO WRK-MODULO.
+           DISPLAY TELA.
+      *SEMPRE RESETAR OS CAMPOS
+               MOVE ZEROS TO CLIENTES-FONE.
+               MOVE SPACES TO CLIENTES-NOME.
+               MOVE SPACES TO CLIENTES-EMAIL.
+      *CAMPOS
+               DISPLAY TELA-REGISTRO.
+      *APENAS ACEITA ENTRADA DA CHAVE
+               ACCEPT CHAVE.
+                READ CLIENTES
+                 INVALID KEY
+                  MOVE 'NAO ENCONTRADO! (N)NOVA CONSULTA?'
+                                           TO WRK-MSGERRO
+      *ACCEPT SEGURA A TELA EM CASO DE ERRO
+                   ACCEPT MOSTRA-ERRO
+                       IF WRK-TECLA = 'N' OR WRK-TECLA = 'n'
+                           PERFORM 6000-CONSULTAR
+                       END-IF
+                 NOT INVALID KEY
+                  MOVE 'ENCONTRADO! (N)OVA CONSULTA?' TO WRK-MSGERRO
+      *DISPLAY MOSTRA DIRETO SEM A INTERACAO DO USUARIO
+                   DISPLAY SS-DADOS
+                   ACCEPT MOSTRA-ERRO
+      *POSSIBILITA A NOVA CONSULTA MESMO AO ENCONTRAR
+                       IF WRK-TECLA = 'N' OR WRK-TECLA = 'n'
+                           PERFORM 6000-CONSULTAR
+                       END-IF
+                END-READ.
+
+      *OPCAO 3 DO MENU CRUD
+       7000-ALTERAR.
+      *CABECALHO
+           MOVE 'MODULO - ALTERAR' TO WRK-MODULO.
+           DISPLAY TELA.
+      *SEMPRE RESETAR OS CAMPOS
+               MOVE ZEROS TO CLIENTES-FONE.
+      *CASO ENCONTRE O REGISTRO ATRAVES DA CHAVE
+           DISPLAY TELA-REGISTRO.
+            ACCEPT CHAVE.
+             READ CLIENTES.
+             IF CLIENTES-STATUS = 0
+      *PODE-SE ALTERAR OS DADOS DO CLIETNE
+              ACCEPT SS-DADOS
+      *APOS SER ENCONTRADO REGRAVAR
+               REWRITE CLIENTES-REG
+      *CONFERENCIA SE O PROCEDIMENTO FOI REALIZADO
+                IF CLIENTES-STATUS = 0
+                 MOVE 'REGISTRO ALTERADO' TO WRK-MSGERRO
+                 ACCEPT MOSTRA-ERRO
+                ELSE
+                 MOVE 'NAO ALTERADO' TO WRK-MSGERRO
+                  ACCEPT MOSTRA-ERRO
+             ELSE
+              MOVE 'REGISTRO NAO ENCONTRADO' TO WRK-MSGERRO
+              ACCEPT MOSTRA-ERRO
+             END-IF.
+
+      *OPCAO 4 DO MENU CRUD
+       8000-EXCLUIR.
+      *CABECALHO
+           MOVE 'MODULO - EXCLUIR' TO WRK-MODULO.
+           DISPLAY TELA.
+      *SEMPRE RESETAR OS CAMPOS
+               MOVE ZEROS TO CLIENTES-FONE.
+               MOVE SPACES TO CLIENTES-NOME.
+               MOVE SPACES TO CLIENTES-EMAIL.
+      *CAMPOS
+               DISPLAY TELA-REGISTRO.
+      *APENAS ACEITA ENTRADA DA CHAVE
+               ACCEPT CHAVE.
+                READ CLIENTES
+                 INVALID KEY
+                  MOVE 'NAO ENCONTRADO!' TO WRK-MSGERRO
+                 NOT INVALID KEY
+                  MOVE 'ENCONTRADO! (S/N)?' TO WRK-MSGERRO
+      *DISPLAY MOSTRA DIRETO SEM A INTERACAO DO USUARIO
+                   DISPLAY SS-DADOS
+                END-READ.
+      *DECIDE ENTRE S/N SE DEVE EXCLUIR
+                   ACCEPT MOSTRA-ERRO.
+      *ENCONTRADO = 0 / NAO ENCONTRADO = 10
+                    IF WRK-TECLA = 'S' OR 's' AND CLIENTES-STATUS = 0
+                        DELETE CLIENTES
+      *SEGURANCA CASO DE CONCORRENCIA AO BANCO DE DADOS (IMPORTANTE)
+                         INVALID KEY
+                         MOVE 'NAO EXCLUIDO' TO WRK-MSGERRO
+                         ACCEPT MOSTRA-ERRO
+                        END-DELETE
+                    END-IF.
+
+      *OPCAO 5.1 DO MENU CRUD
+       9000-RELATORIOTELA.
+      *SEMPRE RESETAR OS CAMPOS
+               MOVE ZEROS TO CLIENTES-FONE.
+      *CABECALHO
+           MOVE 'MODULO - RELATORIO TELA' TO WRK-MODULO.
+           DISPLAY TELA.
+      *CRIA A REFERENCIA EM REGISTRO / LOOPING DE LEITURA NO ARQUIVO
+           ACCEPT CHAVE.
+           DISPLAY TELA.
+           START CLIENTES KEY EQUAL CLIENTES-FONE.
+           READ CLIENTES
+               INVALID KEY
+                   MOVE 'NENHUM REGISTRO ENCONTRADO' TO WRK-MSGERRO
+               NOT INVALID KEY
+                   DISPLAY 'RELATORIO DE CLIENTES'
+                   DISPLAY '---------------------'
+      *LOOPING ATE O FIM DO ARQUIVO STATUS = 10
+                   PERFORM UNTIL CLIENTES-STATUS = 10
+                       ADD 1 TO WRK-QTREGISTROS
+                       DISPLAY CLIENTES-FONE ' '
+                               CLIENTES-NOME ' '
+                               CLIENTES-EMAIL
+      *SEGUE LENDO O PROXIMO REGISTRO
+                       READ CLIENTES NEXT
+                        ADD 1 TO WRK-CONTALINHA
+                       IF WRK-CONTALINHA = 5
+      *SEGURA A TELA PARA VER TODAS AS PAGINAS
+                        MOVE '(ENTER) PARA PROXIMA PAGINA'
+                                            TO WRK-MSGERRO
+                        ACCEPT MOSTRA-ERRO
+      *CABECALHO
+                        MOVE 'MODULO - RELATORIO' TO WRK-MODULO
+                        DISPLAY TELA
+                        DISPLAY 'RELATORIO DE CLIENTES'
+                        DISPLAY '---------------------'
+      *ZERAR O CONTADOR A CADA PAGINA
+                        MOVE 0 TO WRK-CONTALINHA
+                   END-PERFORM
+           END-READ.
+              MOVE 'REGISTROS LIDOS ' TO WRK-MSGERRO.
+      *CONCATENA A QT DE REGISTROS APARTIR DA C17 COM 3 POSICOES
+               MOVE WRK-QTREGISTROS TO WRK-MSGERRO(17:03).
+               ACCEPT MOSTRA-ERRO.
+
+      *OPCAO 5.2 DO MENU CRUD
+       9100-RELATORIODISCO.
+      *SEMPRE RESETAR OS CAMPOS
+               MOVE ZEROS TO CLIENTES-FONE.
+      *CABECALHO
+           MOVE 'MODULO - RELATORIO DSICO' TO WRK-MODULO.
+           DISPLAY TELA.
+      *CRIA A REFERENCIA EM REGISTRO / LOOPING DE LEITURA NO ARQUIVO
+           ACCEPT CHAVE.
+           DISPLAY TELA.
+           START CLIENTES KEY EQUAL CLIENTES-FONE.
+           READ CLIENTES
+               INVALID KEY
+                   MOVE 'NENHUM REGISTRO ENCONTRADO' TO WRK-MSGERRO
+               NOT INVALID KEY
+      *ENCONTRADO A CHAVE CRIA-SE UM ARQUIVO
+                OPEN OUTPUT RELATO
+      *LOOPING ATE O FIM DO ARQUIVO STATUS = 10
+                PERFORM UNTIL CLIENTES-STATUS = 10
+                 ADD 1 TO WRK-QTREGISTROS
+                   MOVE CLIENTES-REG TO RELATO-REG
+                   WRITE RELATO-REG
+      *SEGUE LENDO O PROXIMO REGISTRO
+                 READ CLIENTES NEXT
+                END-PERFORM
+      *ULTIMO PARAGRAFO NO FINAL DO ARQUIVO COM QT DE REGISTROS LIDOS
+                 MOVE 'REGISTROS LIDOS ' TO RELATO-REG
+                 MOVE WRK-QTREGISTROS TO RELATO-REG(18:03)
+                 WRITE RELATO-REG
+      *FECHAR O ARQUIVO CRIADO
+                 CLOSE RELATO
+           END-READ.
+              MOVE 'REGISTROS LIDOS ' TO WRK-MSGERRO.
+      *CONCATENA A QT DE REGISTROS APARTIR DA C17 COM 3 POSICOES
+              MOVE WRK-QTREGISTROS TO WRK-MSGERRO(17:03).
+              ACCEPT MOSTRA-ERRO.
